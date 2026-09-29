@@ -1,7 +1,8 @@
 /**
- * Modelo de Fabricación
- * Persistencia en mod_fab_* y consumo directo de mod_hr_empleados (kora-rrhh)
+ * MODELO: Fabricación y Rutas de Proceso
+ * Relacionado con mod_hr_empleados (RRHH) y mod_biz_items (Inventario)
  */
+
 export class FabricationStore {
   constructor() {
     this.hasBridge = typeof window.KoraDB !== "undefined";
@@ -29,7 +30,6 @@ export class FabricationStore {
             cantidad REAL NOT NULL,
             estado TEXT NOT NULL,
             etapa_actual INTEGER DEFAULT 0,
-            costo_materiales REAL DEFAULT 0,
             costo_mano_obra REAL DEFAULT 0,
             trazabilidad_json TEXT NOT NULL,
             updated_at INTEGER NOT NULL
@@ -46,21 +46,22 @@ export class FabricationStore {
         {
           id: "rut_empanadas",
           nombre: "Elaboración de Empanadas",
-          tipo_flujo: "VENTA_DIRECTA",
+          tipo_flujo: "VENTA_DIRECTA_LOTE",
           etapas: [
-            { nombre: "Armado y Relleno", tiempo_min: 10, insumo: "Masa y Carne" },
-            { nombre: "Fritura y Escurrido", tiempo_min: 8, insumo: "Aceite y Gas" },
-            { nombre: "Empaque y Vitrina", tiempo_min: 2, insumo: "Bandejas" }
+            { nombre: "Armado y Relleno", tiempo_estimado: 15, insumo: "Masa y Carne" },
+            { nombre: "Fritura y Escurrido", tiempo_estimado: 10, insumo: "Aceite y Gas" },
+            { nombre: "Empaque y Vitrina", tiempo_estimado: 5, insumo: "Bandejas / Servilletas" }
           ]
         },
         {
           id: "rut_lavado",
-          nombre: "Servicio Lavado de Autos",
+          nombre: "Lavado y Detallado de Auto",
           tipo_flujo: "CONTRA_PEDIDO",
           etapas: [
-            { nombre: "Inspección y Enjabonado", tiempo_min: 15, insumo: "Champú pH Neutro" },
-            { nombre: "Enjuague y Secado", tiempo_min: 10, insumo: "Cera Líquida" },
-            { nombre: "Acabados y Entrega", tiempo_min: 5, insumo: "Silicona y Ambientador" }
+            { nombre: "Recepción e Inspección", tiempo_estimado: 5, insumo: "Planilla Chequeo" },
+            { nombre: "Enjabonado y Lavado", tiempo_estimado: 20, insumo: "Champú y Desengrasante" },
+            { nombre: "Secado y Cera", tiempo_estimado: 15, insumo: "Cera Líquida" },
+            { nombre: "Entrega al Cliente", tiempo_estimado: 5, insumo: "Ambientador" }
           ]
         }
       ];
@@ -68,9 +69,7 @@ export class FabricationStore {
     }
   }
 
-  /**
-   * Lee la tabla de colaboradores directamente desde kora-rrhh
-   */
+  // --- LECTURA CRUZADA DE OPERARIOS DE RRHH ---
   getOperariosRRHH() {
     if (this.hasBridge) {
       try {
@@ -81,7 +80,7 @@ export class FabricationStore {
         if (rows && rows.length > 0) return rows;
       } catch (e) {}
     }
-    // Fallback de sincronización local
+    // Fallback de localStorage (kora-rrhh)
     const hr = JSON.parse(localStorage.getItem("kora_hr_empleados_v2") || "[]");
     return hr.filter(e => e.activo === 1);
   }
@@ -90,11 +89,17 @@ export class FabricationStore {
     return JSON.parse(localStorage.getItem(this.KEY_ROUTES) || "[]");
   }
 
+  guardarRuta(ruta) {
+    const rutas = this.getRutas();
+    rutas.push(ruta);
+    localStorage.setItem(this.KEY_ROUTES, JSON.stringify(rutas));
+  }
+
   getOrdenes() {
     return JSON.parse(localStorage.getItem(this.KEY_ORDERS) || "[]").sort((a, b) => b.updated_at - a.updated_at);
   }
 
-  crearOrden({ codigo, rutaId, cantidad }) {
+  crearOrden({ codigo, rutaId, cantidad, tipoFlujo }) {
     const ruta = this.getRutas().find(r => r.id === rutaId);
     if (!ruta) return null;
 
@@ -103,11 +108,11 @@ export class FabricationStore {
       codigo,
       ruta_id: ruta.id,
       ruta_nombre: ruta.nombre,
+      tipo_flujo: tipoFlujo,
       cantidad: Number(cantidad) || 1,
       estado: "EN_PROCESO",
       etapa_actual: 0,
       costo_mano_obra: 0,
-      costo_materiales: 0,
       trazabilidad: ruta.etapas.map((et, idx) => ({
         secuencia: idx,
         nombre: et.nombre,
@@ -132,14 +137,14 @@ export class FabricationStore {
     const ord = ordenes.find(o => o.id === ordenId);
     if (!ord) return null;
 
-    const op = this.getOperariosRRHH().find(e => String(e.id) === String(empleadoId));
-    const costoMin = op ? Number(op.costo_minuto) : 100;
+    const operario = this.getOperariosRRHH().find(e => String(e.id) === String(empleadoId));
+    const costoMin = operario ? Number(operario.costo_minuto) : 90;
     const costoMO = Math.round(minutos * costoMin);
 
     const etapa = ord.trazabilidad[etapaIdx];
     if (etapa) {
       etapa.empleado_id = empleadoId;
-      etapa.empleado_nombre = op ? op.nombre : "Colaborador";
+      etapa.empleado_nombre = operario ? operario.nombre : "Operario General";
       etapa.minutos = minutos;
       etapa.costo_mo = costoMO;
       etapa.completado = true;
