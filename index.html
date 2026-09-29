@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Kora Fabricación</title>
-  <!-- Control de Caché en Visor WebView -->
-  <link rel="stylesheet" href="css/styles.css?v=3.1.0">
+  <!-- Invalida cache local con versión 3.2.0 -->
+  <link rel="stylesheet" href="css/styles.css?v=3.2.0">
   <script>
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(function(regs) {
@@ -13,14 +13,14 @@
       });
     }
   </script>
-  <script src="https://cdn.jsdelivr.net/gh/KoraDevsOrg/kora-web-sdk@main/kora-sync.js?v=3.1.0"></script>
+  <script src="https://cdn.jsdelivr.net/gh/KoraDevsOrg/kora-web-sdk@main/kora-sync.js?v=3.2.0"></script>
 </head>
 <body>
 
   <div id="drawerBackdrop" class="drawer-backdrop"></div>
   <aside id="sideDrawer" class="side-drawer"></aside>
 
-  <!-- Encabezado idéntico a Inventario -->
+  <!-- Encabezado unificado de la suite -->
   <header>
     <div class="header-left">
       <button id="btnOpenDrawer" class="btn-icon">☰</button>
@@ -29,10 +29,9 @@
     <div class="offline-badge">100% Offline</div>
   </header>
 
-  <!-- Contenedor de Vistas -->
   <main id="appContent"></main>
 
-  <!-- Modal / Diálogo de Error o Acción -->
+  <!-- Modal nativo para validaciones y avisos -->
   <div id="appModalOverlay" class="modal-overlay" style="display: none;">
     <div class="modal-card">
       <div id="modalIcon" style="font-size: 2rem; margin-bottom: 8px;">⚠️</div>
@@ -45,7 +44,7 @@
   </div>
 
   <!-- ========================================== -->
-  <!-- TEMPLATES (IDs corregidos estrictamente)  -->
+  <!-- TEMPLATES DECLARATIVOS                     -->
   <!-- ========================================== -->
 
   <!-- 1. HUB PRINCIPAL -->
@@ -68,7 +67,7 @@
       </div>
 
       <div class="hub-card" id="btnActionRoutes">
-        <div class="hub-icon-badge icon-blue">🗺️</div>
+        <div class="hub-icon-badge icon-blue">🗺️️</div>
         <div class="hub-info">
           <div class="hub-title">Rutas de Proceso & Pasos</div>
           <div class="hub-desc">Definir secuencias operativas y qué materias primas se consumen por etapa.</div>
@@ -77,7 +76,7 @@
     </div>
   </template>
 
-  <!-- 2. TABLERO DE ÓRDENES ACTIVAS (ID EXACTO: tmpl-orders-view) -->
+  <!-- 2. TABLERO DE ÓRDENES -->
   <template id="tmpl-orders-view">
     <div class="card-header-bar" style="margin-bottom: 14px;">
       <h2 style="font-size: 1.1rem; color: #fff; font-weight: 800;">Órdenes de Trabajo</h2>
@@ -92,7 +91,7 @@
     <div id="ordersCardsContainer" class="orders-list"></div>
   </template>
 
-  <!-- 3. FORMULARIO: CREAR NUEVA ORDEN (ID EXACTO: tmpl-new-order-view) -->
+  <!-- 3. FORMULARIO NUEVA ORDEN -->
   <template id="tmpl-new-order-view">
     <div class="card">
       <div class="card-header-bar" style="margin-bottom: 14px;">
@@ -142,7 +141,7 @@
     </div>
   </template>
 
-  <!-- 4. VISTA: RUTAS CONFIGURADAS (ID EXACTO: tmpl-routes-view) -->
+  <!-- 4. VISTA DE RUTAS -->
   <template id="tmpl-routes-view">
     <div class="card-header-bar" style="margin-bottom: 14px;">
       <h2 style="font-size: 1.1rem; color: #fff; font-weight: 800;">Rutas Operativas</h2>
@@ -156,8 +155,8 @@
     <div id="routesListContainer" class="orders-list"></div>
   </template>
 
-  <!-- 5. FORMULARIO: CREAR RUTA (ID EXACTO: tmpl-new-route-view) -->
-  <template id="tmpl-new-route-view">
+  <!-- 5. FORMULARIO CREAR RUTA (ID exacto: tmpl-new-route-form-view) -->
+  <template id="tmpl-new-route-form-view">
     <div class="card">
       <div class="card-header-bar" style="margin-bottom: 14px;">
         <h2 class="card-title">Crear Ruta de Proceso</h2>
@@ -200,7 +199,6 @@
     </div>
   </template>
 
-  <!-- Controlador Modular -->
-  <script type="module" src="js/app.js?v=3.1.0"></script>
+  <script type="module" src="js/app.js?v=3.2.0"></script>
 </body>
 </html>
