@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Kora Fabricación</title>
   <link rel="stylesheet" href="css/styles.css">
+  <!-- SDK Universal de Sincronización Local-First -->
   <script src="https://cdn.jsdelivr.net/gh/KoraDevsOrg/kora-web-sdk@main/kora-sync.js"></script>
 </head>
 <body>
@@ -12,29 +13,8 @@
   <!-- Backdrop accesible del Drawer -->
   <div id="drawerBackdrop" class="drawer-backdrop"></div>
 
-  <!-- Menú Hamburguesa Lateral -->
-  <aside id="sideDrawer" class="side-drawer">
-    <div class="drawer-header">
-      <h2 style="font-size: 1.15rem; font-weight: 800; color: #fff;">Ecosistema Kora</h2>
-      <button id="btnCloseDrawer" class="btn-icon">✕</button>
-    </div>
-    
-    <div class="drawer-section-title">SUITE DE NEGOCIO DESCENTRALIZADA</div>
-    <nav class="drawer-list">
-      <button class="drawer-item" data-action="ext-inventario">📦 Gestión de Inventario</button>
-      <button class="drawer-item active" data-action="home">⚙️ Fabricación & Órdenes</button>
-      <button class="drawer-item" data-action="ext-ventas">🏷️ Ventas & Mostrador</button>
-      <button class="drawer-item" data-action="ext-costos">💡 Costos & Servicios</button>
-      <button class="drawer-item" data-action="ext-financiero">📊 Financiero & Cuentas</button>
-    </nav>
-
-    <div class="drawer-footer">
-      <small style="color: var(--text-sub); display: block; margin-bottom: 8px;">Kora Admin DB (Motor Central)</small>
-      <button id="btnOpenKoraAdmin" class="btn-secondary" style="width: 100%; font-size: 0.8rem;">
-        ⚙️ Administrar Bases de Datos
-      </button>
-    </div>
-  </aside>
+  <!-- Menú Hamburguesa Lateral (Poblado por KoraBizNav) -->
+  <aside id="sideDrawer" class="side-drawer"></aside>
 
   <!-- Encabezado Principal -->
   <header>
@@ -45,63 +25,55 @@
     <div class="offline-badge">100% Offline</div>
   </header>
 
-  <!-- Contenedor Principal de Vistas -->
+  <!-- Contenedor Principal donde se montan las Vistas -->
   <main id="appContent"></main>
 
   <!-- ========================================== -->
   <!-- PLANTILLAS DE VISTAS (TEMPLATES)          -->
   <!-- ========================================== -->
 
-  <!-- 1. PANTALLA PRINCIPAL: HUB TÁCTIL -->
+  <!-- 1. PANTALLA PRINCIPAL: HUB TÁCTIL (Mismo Grid Visual) -->
   <template id="tmpl-home-view">
     <div class="hub-grid">
       <div class="hub-card" id="btnActionActiveOrders">
         <div class="hub-icon-badge icon-orange">⚡</div>
         <div class="hub-info">
-          <div class="hub-title">Órdenes en Proceso</div>
-          <div class="hub-desc">Ver pedidos en curso, cronometrar etapas y notificar avances.</div>
+          <div class="hub-title">Órdenes en Taller / Proceso</div>
+          <div class="hub-desc">Ver lotes o servicios en curso, cronometrar y notificar avance por operario.</div>
         </div>
       </div>
 
       <div class="hub-card" id="btnActionNewOrder">
         <div class="hub-icon-badge icon-green">➕</div>
         <div class="hub-info">
-          <div class="hub-title">Crear Orden de Producción</div>
-          <div class="hub-desc">Iniciar orden de lote o contra pedido congelando insumos y ruta.</div>
+          <div class="hub-title">Crear Orden de Fabricación</div>
+          <div class="hub-desc">Lanzar orden contra-pedido o lote congelando su ruta operativa.</div>
         </div>
       </div>
 
       <div class="hub-card" id="btnActionRoutes">
         <div class="hub-icon-badge icon-blue">🗺️</div>
         <div class="hub-info">
-          <div class="hub-title">Configurar Rutas</div>
-          <div class="hub-desc">Crear secuencias operativas y definir qué insumos se descuentan por etapa.</div>
-        </div>
-      </div>
-
-      <div class="hub-card" id="btnActionHR">
-        <div class="hub-icon-badge icon-purple">👥</div>
-        <div class="hub-info">
-          <div class="hub-title">Gestión Humana</div>
-          <div class="hub-desc">Registrar operarios, cocineros o colaboradores y sus costos por minuto.</div>
+          <div class="hub-title">Rutas de Proceso & Pasos</div>
+          <div class="hub-desc">Definir secuencias operativas y materias primas a consumir por etapa.</div>
         </div>
       </div>
     </div>
   </template>
 
-  <!-- 2. VISTA: ÓRDENES EN PROCESO (TABLERO TÁCTIL) -->
-  <template id="tmpl-active-orders-view">
+  <!-- 2. VISTA: TABLERO DE ÓRDENES EN PROCESO -->
+  <template id="tmpl-orders-view">
     <div class="card-header-bar" style="margin-bottom: 14px;">
-      <h2 style="font-size: 1.1rem; color: #fff; font-weight: 800;">Órdenes en Taller / Cocina</h2>
+      <h2 style="font-size: 1.1rem; color: #fff; font-weight: 800;">Órdenes de Trabajo</h2>
       <button type="button" class="btn-icon" id="btnBackHomeOrders">←</button>
     </div>
 
     <div style="display: flex; gap: 8px; margin-bottom: 14px;">
       <button id="btnFilterActive" class="btn-secondary btn-sm active" style="flex: 1;">En Proceso</button>
-      <button id="btnFilterFinished" class="btn-secondary btn-sm" style="flex: 1;">Finalizadas</button>
+      <button id="btnFilterDone" class="btn-secondary btn-sm" style="flex: 1;">Terminadas</button>
     </div>
 
-    <div id="ordersCardsContainer" class="orders-list"></div>
+    <div id="ordersListContainer" class="orders-list"></div>
   </template>
 
   <!-- 3. FORMULARIO: CREAR NUEVA ORDEN -->
@@ -125,36 +97,36 @@
 
         <div class="form-grid">
           <div class="form-group">
-            <label>Cantidad a Producir:</label>
+            <label>Cantidad a Producir / Lote:</label>
             <input type="number" step="any" id="ordCantidad" class="input-field" value="20" min="1" required>
           </div>
           <div class="form-group">
             <label>Tipo de Flujo:</label>
             <select id="ordTipoFlujo" class="input-field">
-              <option value="VENTA_DIRECTA_LOTE">Producción para Stock</option>
-              <option value="CONTRA_PEDIDO">Contra Pedido / Servicio</option>
+              <option value="VENTA_DIRECTA_LOTE">Producción en Lote</option>
+              <option value="CONTRA_PEDIDO">Servicio Contra Pedido</option>
             </select>
           </div>
         </div>
 
-        <div class="module-notice-banner" style="margin-top: 8px;">
+        <div class="module-notice-banner" style="margin-top: 10px;">
           <div>
-            <strong style="color: var(--accent-blue); font-size: 0.85rem;">Foto Inmutable:</strong>
+            <strong style="color: var(--accent-blue); font-size: 0.85rem;">Enlace con RRHH e Inventario:</strong>
             <p style="color: var(--text-sub); font-size: 0.75rem; margin-top: 2px;">
-              Los insumos se descontarán automáticamente del inventario al notificar cada etapa.
+              Podrás asignar operarios desde la base de datos de Gestión Humana y calcular el costo de mano de obra en cada etapa.
             </p>
           </div>
         </div>
 
         <div class="form-actions" style="margin-top: 18px;">
           <button type="button" class="btn-secondary" id="btnCancelNewOrder">Cancelar</button>
-          <button type="submit" class="btn-primary">Iniciar Fabricación</button>
+          <button type="submit" class="btn-primary">Lanzar Fabricación</button>
         </div>
       </form>
     </div>
   </template>
 
-  <!-- 4. VISTA: CONFIGURACIÓN DE RUTAS -->
+  <!-- 4. VISTA: RUTAS Y PROCESOS -->
   <template id="tmpl-routes-view">
     <div class="card-header-bar" style="margin-bottom: 14px;">
       <h2 style="font-size: 1.1rem; color: #fff; font-weight: 800;">Rutas Operativas</h2>
@@ -179,21 +151,15 @@
       <form id="newRouteForm">
         <div class="form-group">
           <label>Nombre de la Ruta:</label>
-          <input type="text" id="routeNombre" class="input-field" required placeholder="Ej: Ruta Fritura Empanada, Ruta Lavado Express">
+          <input type="text" id="routeNombre" class="input-field" required placeholder="Ej: Fritura de Empanadas, Lavado General">
         </div>
 
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Producto o Servicio Final:</label>
-            <select id="routeMaterialId" class="input-field" required></select>
-          </div>
-          <div class="form-group">
-            <label>Modelo Operativo:</label>
-            <select id="routeTipoProceso" class="input-field">
-              <option value="VENTA_DIRECTA_LOTE">Producción en Lote</option>
-              <option value="CONTRA_PEDIDO">Servicio Contra Pedido</option>
-            </select>
-          </div>
+        <div class="form-group">
+          <label>Tipo de Operación:</label>
+          <select id="routeTipoFlujo" class="input-field">
+            <option value="VENTA_DIRECTA_LOTE">Producción en Lote para Vitrina</option>
+            <option value="CONTRA_PEDIDO">Servicio / Pedido Específico</option>
+          </select>
         </div>
 
         <hr style="border: 0; border-top: 1px solid var(--border); margin: 16px 0;">
@@ -212,49 +178,7 @@
     </div>
   </template>
 
-  <!-- 6. VISTA: GESTIÓN HUMANA (HR) -->
-  <template id="tmpl-hr-view">
-    <div class="card-header-bar" style="margin-bottom: 14px;">
-      <h2 style="font-size: 1.1rem; color: #fff; font-weight: 800;">Gestión Humana & Costo Tiempo</h2>
-      <button type="button" class="btn-icon" id="btnBackHomeHR">←</button>
-    </div>
-
-    <div class="card">
-      <h3 style="font-size: 0.95rem; color: var(--accent-gold); margin-bottom: 12px;">Nuevo Operario / Colaborador</h3>
-      <form id="hrForm">
-        <div class="form-group">
-          <label>Nombre Completo:</label>
-          <input type="text" id="hrNombre" class="input-field" required placeholder="Ej: Pedro Pérez">
-        </div>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Rol / Oficio:</label>
-            <input type="text" id="hrRol" class="input-field" required placeholder="Ej: Cocinero, Lavador">
-          </div>
-          <div class="form-group">
-            <label>Costo por Minuto ($):</label>
-            <input type="number" step="any" id="hrCostoMinuto" class="input-field" required value="100" placeholder="$ / minuto">
-          </div>
-        </div>
-        <button type="submit" class="btn-primary" style="margin-top: 8px;">Registrar Colaborador</button>
-      </form>
-    </div>
-
-    <div class="table-container">
-      <table>
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Rol</th>
-            <th>Costo / Min</th>
-          </tr>
-        </thead>
-        <tbody id="hrTbody"></tbody>
-      </table>
-    </div>
-  </template>
-
-  <!-- Script Modular -->
+  <!-- Controlador Modular (MVC) -->
   <script type="module" src="js/app.js"></script>
 </body>
 </html>
