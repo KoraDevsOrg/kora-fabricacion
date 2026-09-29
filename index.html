@@ -4,85 +4,99 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Kora Fabricación</title>
-  <link rel="stylesheet" href="css/styles.css">
-  <script src="https://cdn.jsdelivr.net/gh/KoraDevsOrg/kora-web-sdk@main/kora-sync.js"></script>
+  <!-- Control de Caché en Visor WebView -->
+  <link rel="stylesheet" href="css/styles.css?v=3.1.0">
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(regs) {
+        for (let r of regs) r.unregister();
+      });
+    }
+  </script>
+  <script src="https://cdn.jsdelivr.net/gh/KoraDevsOrg/kora-web-sdk@main/kora-sync.js?v=3.1.0"></script>
 </head>
 <body>
 
-  <!-- Backdrop accesible del Drawer -->
   <div id="drawerBackdrop" class="drawer-backdrop"></div>
-
-  <!-- Drawer Lateral -->
   <aside id="sideDrawer" class="side-drawer"></aside>
 
-  <!-- Encabezado Principal idéntico a Inventario -->
+  <!-- Encabezado idéntico a Inventario -->
   <header>
     <div class="header-left">
-      <button id="btnOpenDrawer" class="btn-hamburger" aria-label="Abrir Menú">☰</button>
+      <button id="btnOpenDrawer" class="btn-icon">☰</button>
       <h1 class="header-title" id="headerTitle">Kora Fabricación</h1>
     </div>
     <div class="offline-badge">100% Offline</div>
   </header>
 
-  <!-- Contenedor Principal dinámico -->
+  <!-- Contenedor de Vistas -->
   <main id="appContent"></main>
 
+  <!-- Modal / Diálogo de Error o Acción -->
+  <div id="appModalOverlay" class="modal-overlay" style="display: none;">
+    <div class="modal-card">
+      <div id="modalIcon" style="font-size: 2rem; margin-bottom: 8px;">⚠️</div>
+      <h3 id="modalTitle" style="color: #fff; margin-bottom: 6px; font-size: 1.1rem;">Aviso del Sistema</h3>
+      <p id="modalMsg" style="font-size: 0.85rem; color: var(--text-sub); line-height: 1.4; margin-bottom: 16px;"></p>
+      <div id="modalActions" style="display: flex; gap: 8px; justify-content: flex-end;">
+        <button id="btnModalClose" class="btn-primary" style="width: auto; padding: 8px 16px;">Entendido</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ========================================== -->
-  <!-- TEMPLATES DECLARATIVOS                     -->
+  <!-- TEMPLATES (IDs corregidos estrictamente)  -->
   <!-- ========================================== -->
 
-  <!-- 1. HUB TÁCTIL PRINCIPAL (Calco exacto de kora-inventario) -->
+  <!-- 1. HUB PRINCIPAL -->
   <template id="tmpl-home-view">
     <div class="hub-grid">
       <div class="hub-card" id="btnActionActiveOrders">
-        <div class="hub-icon-box icon-box-blue">⚡</div>
+        <div class="hub-icon-badge icon-orange">⚡</div>
         <div class="hub-info">
           <div class="hub-title">Órdenes en Taller / Proceso</div>
           <div class="hub-desc">Ver órdenes en ejecución, cronometrar etapas en vivo y notificar avances.</div>
         </div>
-        <div class="hub-arrow">➔</div>
       </div>
 
       <div class="hub-card" id="btnActionNewOrder">
-        <div class="hub-icon-box icon-box-gold">➕</div>
+        <div class="hub-icon-badge icon-green">➕</div>
         <div class="hub-info">
           <div class="hub-title">Crear Orden de Fabricación</div>
           <div class="hub-desc">Lanzar orden congelando snapshot de materiales (BOM) y ruta operativa.</div>
         </div>
-        <div class="hub-arrow">➔</div>
       </div>
 
       <div class="hub-card" id="btnActionRoutes">
-        <div class="hub-icon-box icon-box-purple">📐</div>
+        <div class="hub-icon-badge icon-blue">🗺️</div>
         <div class="hub-info">
           <div class="hub-title">Rutas de Proceso & Pasos</div>
           <div class="hub-desc">Definir secuencias operativas y qué materias primas se consumen por etapa.</div>
         </div>
-        <div class="hub-arrow">➔</div>
       </div>
     </div>
   </template>
 
-  <!-- 2. VISTA: TABLERO DE ÓRDENES ACTIVAS -->
-  <template id="tmpl-active-orders-view">
-    <div class="card-header-bar">
-      <h2 style="font-size: 1.15rem; color: #fff; font-weight: 800;">Órdenes de Trabajo</h2>
+  <!-- 2. TABLERO DE ÓRDENES ACTIVAS (ID EXACTO: tmpl-orders-view) -->
+  <template id="tmpl-orders-view">
+    <div class="card-header-bar" style="margin-bottom: 14px;">
+      <h2 style="font-size: 1.1rem; color: #fff; font-weight: 800;">Órdenes de Trabajo</h2>
       <button type="button" class="btn-icon" id="btnBackHomeOrders">←</button>
     </div>
 
-    <div style="display: flex; gap: 10px; margin-bottom: 16px;">
+    <div style="display: flex; gap: 8px; margin-bottom: 14px;">
       <button id="btnFilterActive" class="btn-secondary btn-sm active" style="flex: 1;">En Proceso</button>
-      <button id="btnFilterDone" class="btn-secondary btn-sm" style="flex: 1;">Finalizadas</button>
+      <button id="btnFilterDone" class="btn-secondary btn-sm" style="flex: 1;">Terminadas</button>
     </div>
 
-    <div id="ordersCardsContainer" style="display: flex; flex-direction: column; gap: 14px;"></div>
+    <div id="ordersCardsContainer" class="orders-list"></div>
   </template>
 
-  <!-- 3. FORMULARIO: CREAR NUEVA ORDEN -->
+  <!-- 3. FORMULARIO: CREAR NUEVA ORDEN (ID EXACTO: tmpl-new-order-view) -->
   <template id="tmpl-new-order-view">
     <div class="card">
-      <div class="card-header-bar">
-        <h2 style="font-size: 1.15rem; color: #fff; font-weight: 800;">Lanzar Orden de Fabricación</h2>
+      <div class="card-header-bar" style="margin-bottom: 14px;">
+        <h2 class="card-title">Nueva Orden de Fabricación</h2>
         <button type="button" class="btn-icon" id="btnBackHomeNewOrder">←</button>
       </div>
 
@@ -111,37 +125,42 @@
           </div>
         </div>
 
-        <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 10px; padding: 12px; margin-top: 10px;">
-          <strong style="color: var(--accent-blue); font-size: 0.85rem;">Enlace con Inventario y RRHH:</strong>
-          <p style="color: var(--text-sub); font-size: 0.75rem; margin-top: 4px; line-height: 1.35;">
-            Los insumos se descontarán de la tabla <code>mod_biz_items</code> automáticamente al completar cada etapa, y el costo de mano de obra se liquidará con los operarios de <code>mod_hr_empleados</code>.
-          </p>
+        <div class="module-notice-banner" style="margin-top: 10px;">
+          <div>
+            <strong style="color: var(--accent-blue); font-size: 0.85rem;">Enlace con Inventario y RRHH:</strong>
+            <p style="color: var(--text-sub); font-size: 0.75rem; margin-top: 2px;">
+              Los insumos se descontarán de la tabla <code>mod_biz_items</code> automáticamente al completar cada etapa y el costo de mano de obra se liquidará con <code>mod_hr_empleados</code>.
+            </p>
+          </div>
         </div>
 
-        <div style="display: flex; gap: 10px; margin-top: 20px;">
-          <button type="button" class="btn-secondary" id="btnCancelNewOrder" style="flex: 1;">Cancelar</button>
-          <button type="submit" class="btn-primary" style="flex: 1;">Lanzar a Fabricación</button>
+        <div class="form-actions" style="margin-top: 18px;">
+          <button type="button" class="btn-secondary" id="btnCancelNewOrder">Cancelar</button>
+          <button type="submit" class="btn-primary">Lanzar Fabricación</button>
         </div>
       </form>
     </div>
   </template>
 
-  <!-- 4. VISTA: RUTAS CONFIGURADAS -->
+  <!-- 4. VISTA: RUTAS CONFIGURADAS (ID EXACTO: tmpl-routes-view) -->
   <template id="tmpl-routes-view">
-    <div class="card-header-bar">
-      <h2 style="font-size: 1.15rem; color: #fff; font-weight: 800;">Rutas Operativas</h2>
+    <div class="card-header-bar" style="margin-bottom: 14px;">
+      <h2 style="font-size: 1.1rem; color: #fff; font-weight: 800;">Rutas Operativas</h2>
       <button type="button" class="btn-icon" id="btnBackHomeRoutes">←</button>
     </div>
 
-    <button id="btnGoNewRoute" class="btn-primary" style="margin-bottom: 16px;">+ Nueva Ruta de Trabajo</button>
-    <div id="routesListContainer" style="display: flex; flex-direction: column; gap: 12px;"></div>
+    <div style="margin-bottom: 14px;">
+      <button id="btnGoNewRoute" class="btn-primary" style="width: 100%;">+ Nueva Ruta de Trabajo</button>
+    </div>
+
+    <div id="routesListContainer" class="orders-list"></div>
   </template>
 
-  <!-- 5. FORMULARIO: CREAR RUTA CON ETAPAS E INSUMOS -->
-  <template id="tmpl-new-route-form-view">
+  <!-- 5. FORMULARIO: CREAR RUTA (ID EXACTO: tmpl-new-route-view) -->
+  <template id="tmpl-new-route-view">
     <div class="card">
-      <div class="card-header-bar">
-        <h2 style="font-size: 1.15rem; color: #fff; font-weight: 800;">Crear Ruta de Proceso</h2>
+      <div class="card-header-bar" style="margin-bottom: 14px;">
+        <h2 class="card-title">Crear Ruta de Proceso</h2>
         <button type="button" class="btn-icon" id="btnBackToRoutes">←</button>
       </div>
 
@@ -159,29 +178,29 @@
           <div class="form-group">
             <label>Tipo de Operación:</label>
             <select id="routeTipoFlujo" class="input-field">
-              <option value="VENTA_DIRECTA_LOTE">Producción en Lote</option>
-              <option value="CONTRA_PEDIDO">Servicio Contra Pedido</option>
+              <option value="VENTA_DIRECTA_LOTE">Producción en Lote para Vitrina</option>
+              <option value="CONTRA_PEDIDO">Servicio / Pedido Específico</option>
             </select>
           </div>
         </div>
 
-        <hr style="border: 0; border-top: 1px solid var(--border-card); margin: 18px 0;">
-        <h3 style="font-size: 0.9rem; color: var(--accent-gold); margin-bottom: 10px;">Etapas Secuenciales</h3>
-        <div id="routeStepsContainer" style="display: flex; flex-direction: column; gap: 10px;"></div>
+        <hr style="border: 0; border-top: 1px solid var(--border); margin: 16px 0;">
+        <h3 style="font-size: 0.85rem; color: var(--accent-gold); margin-bottom: 8px;">Etapas Secuenciales</h3>
+        <div id="routeStepsContainer" style="display: flex; flex-direction: column; gap: 8px;"></div>
 
-        <button type="button" class="btn-secondary" id="btnAddStepRow" style="width: 100%; margin-top: 8px;">
+        <button type="button" class="btn-secondary" id="btnAddStepRow" style="width: 100%; margin-top: 6px;">
           + Añadir Siguiente Etapa
         </button>
 
-        <div style="display: flex; gap: 10px; margin-top: 22px;">
-          <button type="button" class="btn-secondary" id="btnCancelRoute" style="flex: 1;">Cancelar</button>
-          <button type="submit" class="btn-primary" style="flex: 1;">Guardar Ruta</button>
+        <div class="form-actions" style="margin-top: 18px;">
+          <button type="button" class="btn-secondary" id="btnCancelRoute">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar Ruta</button>
         </div>
       </form>
     </div>
   </template>
 
-  <!-- Controlador Modular (MVC) -->
-  <script type="module" src="js/app.js"></script>
+  <!-- Controlador Modular -->
+  <script type="module" src="js/app.js?v=3.1.0"></script>
 </body>
 </html>
