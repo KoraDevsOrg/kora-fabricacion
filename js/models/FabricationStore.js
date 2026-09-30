@@ -86,48 +86,61 @@ export class FabricationStore {
     }
   }
 
-  // --- LECTURA CRUZADA DE INVENTARIO Y RRHH ---
-  getMateriasPrimasInventario() {
-    if (this.hasBridge) {
-      try {
-        const rows = JSON.parse(window.KoraDB.query(
-          "SELECT id, nombre, unidad_medida, stock_actual FROM mod_biz_items WHERE tipo = 'MATERIA_PRIMA' ORDER BY nombre ASC",
-          "[]"
-        ));
-        if (Array.isArray(rows) && rows.length > 0) return rows;
-      } catch (e) {}
+  // --- LECTURA DE MATERIAS PRIMAS (INVENTARIO) ---
+getMateriasPrimasInventario() {
+  if (this.hasBridge) {
+    try {
+      const res = window.KoraDB.query(
+        "SELECT id, nombre, unidad_medida, stock_actual FROM mod_biz_items WHERE tipo = 'MATERIA_PRIMA' ORDER BY nombre ASC;",
+        "[]"
+      );
+      const rows = typeof res === "string" ? JSON.parse(res) : res;
+      if (Array.isArray(rows) && rows.length > 0) return rows;
+    } catch (e) {
+      console.warn("[FabricationStore] Error leyendo SQLite mod_biz_items:", e);
     }
-    const items = JSON.parse(localStorage.getItem("kora_inv_items_v4") || localStorage.getItem("kora_inv_items_v5") || "[]");
-    return items.filter(i => i.tipo === "MATERIA_PRIMA");
   }
+  // Fallback con la misma clave de kora-inventario
+  const fallback = JSON.parse(localStorage.getItem("kora_inv_items_v4") || "[]");
+  return fallback.filter(i => i.tipo === "MATERIA_PRIMA");
+}
 
-  getProductosTerminadosInventario() {
-    if (this.hasBridge) {
-      try {
-        const rows = JSON.parse(window.KoraDB.query(
-          "SELECT id, nombre, unidad_medida, stock_actual FROM mod_biz_items WHERE tipo = 'PRODUCTO_TERMINADO' ORDER BY nombre ASC",
-          "[]"
-        ));
-        if (Array.isArray(rows) && rows.length > 0) return rows;
-      } catch (e) {}
+// --- LECTURA DE PRODUCTOS TERMINADOS (INVENTARIO) ---
+getProductosTerminadosInventario() {
+  if (this.hasBridge) {
+    try {
+      const res = window.KoraDB.query(
+        "SELECT id, nombre, unidad_medida, stock_actual FROM mod_biz_items WHERE tipo = 'PRODUCTO_TERMINADO' ORDER BY nombre ASC;",
+        "[]"
+      );
+      const rows = typeof res === "string" ? JSON.parse(res) : res;
+      if (Array.isArray(rows) && rows.length > 0) return rows;
+    } catch (e) {
+      console.warn("[FabricationStore] Error leyendo terminados en SQLite:", e);
     }
-    const items = JSON.parse(localStorage.getItem("kora_inv_items_v4") || localStorage.getItem("kora_inv_items_v5") || "[]");
-    return items.filter(i => i.tipo === "PRODUCTO_TERMINADO");
   }
+  const fallback = JSON.parse(localStorage.getItem("kora_inv_items_v4") || "[]");
+  return fallback.filter(i => i.tipo === "PRODUCTO_TERMINADO");
+}
 
-  getOperariosRRHH() {
-    if (this.hasBridge) {
-      try {
-        const rows = JSON.parse(window.KoraDB.query(
-          "SELECT id, nombre, rol, costo_minuto FROM mod_hr_empleados WHERE activo = 1 ORDER BY nombre ASC",
-          "[]"
-        ));
-        if (Array.isArray(rows) && rows.length > 0) return rows;
-      } catch (e) {}
+// --- LECTURA DE COLABORADORES (RRHH) ---
+getOperariosRRHH() {
+  if (this.hasBridge) {
+    try {
+      const res = window.KoraDB.query(
+        "SELECT id, nombre, rol, costo_minuto FROM mod_hr_empleados WHERE activo = 1 ORDER BY nombre ASC;",
+        "[]"
+      );
+      const rows = typeof res === "string" ? JSON.parse(res) : res;
+      if (Array.isArray(rows) && rows.length > 0) return rows;
+    } catch (e) {
+      console.warn("[FabricationStore] Error leyendo SQLite mod_hr_empleados:", e);
     }
-    const hr = JSON.parse(localStorage.getItem("kora_hr_empleados_v2") || "[]");
-    return hr.filter(e => e.activo === 1);
   }
+  // Fallback con la misma clave de kora-rrhh
+  const fallback = JSON.parse(localStorage.getItem("kora_hr_empleados_v2") || "[]");
+  return fallback.filter(e => e.activo === 1);
+}
 
   // --- GESTIÓN DE RUTAS RELACIONALES ---
   getRutasCompletas() {
