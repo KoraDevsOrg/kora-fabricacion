@@ -4,14 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Kora Fabricación</title>
-  <link rel="stylesheet" href="css/styles.css?v=3.5.0">
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(regs => {
+      navigator.serviceWorker.getRegistrations().then(function(regs) {
         for (let r of regs) r.unregister();
       });
     }
+    if ('caches' in window) {
+      caches.keys().then(function(names) {
+        for (let name of names) caches.delete(name);
+      });
+    }
   </script>
+  <link rel="stylesheet" href="css/styles.css?v=20261001_1">
   <script src="https://cdn.jsdelivr.net/gh/KoraDevsOrg/kora-web-sdk@main/kora-sync.js?v=3.5.0"></script>
 </head>
 <body>
@@ -190,6 +195,6 @@
     </div>
   </template>
 
-  <script type="module" src="js/app.js?v=3.5.0"></script>
+  <script type="module" src="js/app.js?v=20261001_1"></script>
 </body>
 </html>
