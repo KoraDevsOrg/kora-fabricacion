@@ -3,8 +3,8 @@
  * Gestiona rutas con materias primas relacionales y cronómetro en vivo
  */
 
-import { KoraBizNav } from `https://cdn.jsdelivr.net/gh/KoraDevsOrg/kora-web-sdk@main/kora-biz-nav.js?t=${Date.now()}`;
-import { FabricationStore } from "./models/FabricationStore.js?v=3.5.0";
+import { KoraBizNav } from "https://cdn.jsdelivr.net/gh/KoraDevsOrg/kora-web-sdk@main/kora-biz-nav.js?nocache=" + Date.now();
+import { FabricationStore } from "./models/FabricationStore.js?v=20261001_1";
 
 class FabricationApp {
   constructor() {
